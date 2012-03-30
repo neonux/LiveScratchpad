@@ -1,0 +1,4 @@
+content LiveScratchpad content/
+overlay chrome://browser/content/scratchpad.xul chrome://LiveScratchpad/content/scratchpad_overlay.xul
+locale LiveScratchpad en-US locale/en-US/
+skin LiveScratchpad classic/1.0 skin/

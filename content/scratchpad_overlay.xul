@@ -1,0 +1,150 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Live Scrathpad code.
+   -
+   - The Initial Developer of the Original Code is The Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2011
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Cedric Vivier <cedricv@neonux.com> (original author)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+<!DOCTYPE overlay [
+<!ENTITY % liveEvaluatorDTD SYSTEM "chrome://LiveScratchpad/locale/live-evaluator.dtd">
+ %liveEvaluatorDTD;
+]>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<overlay id="live-evaluator-scratchpad-overlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <commandset id="sp-commandset">
+    <command id="sp-cmd-evaluate"
+             insertafter="sp-cmd-display"
+             oncommand="ScratchpadLiveEvaluator.toggle();"/>
+  </commandset>
+
+  <keyset id="sp-keyset">
+    <key id="sp-key-evaluate"
+         insertafter="sp-key-display"
+         key="e"
+         command="sp-cmd-evaluate"
+         modifiers="accel"/>
+  </keyset>
+
+  <menupopup id="sp-menu_executepopup">
+    <menuitem id="sp-text-evaluate"
+              insertafter="sp-text-display"
+              label="&evaluateFunction.label;"
+              accesskey="&evaluateFunction.accesskey;"
+              key="sp-key-evaluate"
+              command="sp-cmd-evaluate"/>
+  </menupopup>
+
+  <notificationbox id="scratchpad-notificationbox" flex="1" orient="horizontal">
+    <iframe id="scratchpad-live-evaluator" flex="1"
+            src="chrome://LiveScratchpad/content/live-evaluator.html"
+            collapsed="true"/>
+  </notificationbox>
+
+  <script type="application/javascript"><![CDATA[
+  Components.utils.import("chrome://LiveScratchpad/content/LiveEvaluator.jsm");
+  Components.utils.import("chrome://LiveScratchpad/content/LiveEvaluatorUI.jsm");
+
+  var ScratchpadLiveEvaluator = {
+    evaluator: null,
+
+    get iframe() {
+      if (!this._iframe) {
+        this._iframe = document.querySelector("#scratchpad-live-evaluator");
+      }
+      return this._iframe;
+    },
+
+    toggle: function SPLE_toggle()
+    {
+      if (this.iframe.hasAttribute("collapsed")) {
+        this.evaluate();
+        this.iframe.removeAttribute("collapsed");
+        this.evaluator.editor = Scratchpad.editor;
+      } else {
+        this.iframe.setAttribute("collapsed", "true");
+        this.evaluator.editor = null;
+      }
+    },
+
+    evaluate: function SPLE_evaluate()
+    {
+      if (!this.evaluator) {
+        this._initialize(function () { this.evaluate(); }.bind(this));
+        return;
+      }
+      this.evaluator.evaluate(true);
+    },
+
+    _initialize: function SPLE__initialize(aCallback)
+    {
+      //FIXME:
+      document.querySelector("#scratchpad-editor").setAttribute("flex", "2");
+
+      this.evaluator = new LiveEvaluator();
+      this.evaluator.editor = Scratchpad.editor;
+      this.evaluator.sandboxFactory = function () {
+        //TODO: use Scratchpad.createSandbox API, see bug 740777
+        switch (Scratchpad.executionContext) {
+        case SCRATCHPAD_CONTEXT_CONTENT:
+          let contentWindow = Scratchpad.gBrowser.selectedBrowser.contentWindow;
+          return new Components.utils.Sandbox(contentWindow,
+            {sandboxPrototype: contentWindow, wantXrays: false, 
+             sandboxName: 'live-scratchpad-content'});
+        case SCRATCHPAD_CONTEXT_BROWSER:
+          return new Components.utils.Sandbox(Scratchpad.browserWindow,
+            {sandboxPrototype: Scratchpad.browserWindow, wantXrays: false, 
+             sandboxName: 'live-scratchpad-chrome'});
+        }
+        return null;
+      };
+
+      let initializeUI = function () {
+        this.evaluatorUI = new LiveEvaluatorUI(this.iframe.contentDocument.body);
+        this.evaluatorUI.evaluator = this.evaluator;
+      }.bind(this);
+
+      if (this.iframe.contentDocument
+          && this.iframe.contentDocument.readyState == "complete") {
+        initializeUI();
+        aCallback();
+      } else {
+        this.iframe.addEventListener("load", function onLoad() {
+          this.iframe.removeEventListener("load", onLoad, false);
+          initializeUI();
+          aCallback();
+        }, false);
+      }
+    }
+  };
+  ]]></script>
+</overlay>

@@ -1,0 +1,21 @@
+<!-- LOCALIZATION NOTE : FILE This file contains the Live Evaluator strings -->
+<!-- LOCALIZATION NOTE : FILE Do not translate commandkeys -->
+<!-- LOCALIZATION NOTE : The correct localization of this file might be to keep
+     it in English, or another language commonly spoken among web developers.
+     You want to make that choice consistent across the developer tools.
+     A good criteria is the language in which you'd find the best documentation
+     on web development on the web. -->
+
+<!-- LOCALIZATION NOTE (evaluateFunction.label): This menu item label appears
+  -  in the Execute menu of the Scratchpad. -->
+<!ENTITY evaluateFunction.label             "Toggle live evaluation…">
+<!ENTITY evaluateFunction.accesskey         "e">
+
+<!-- LOCALIZATION NOTE (noFunctionError.title): -->
+<!ENTITY noFunctionError.title              "No function to evaluate">
+<!-- LOCALIZATION NOTE (noFunctionError.description): -->
+<!ENTITY noFunctionError.description
+  "The editor caret must be inside a function for evaluation.">
+
+<!-- LOCALIZATION NOTE (parseError.title): -->
+<!ENTITY parseError.title                   "Syntax error">

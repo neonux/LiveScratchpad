@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+<Description about="urn:mozilla:install-manifest">
+  <em:id>devtools-LiveScratchpad@mozilla.com</em:id>
+  <em:name>Live Scratchpad</em:name>
+  <em:version>0.1.0</em:version>
+  <em:description>Evaluate your JavaScript functions in real-time while editing in the Scratchpad.</em:description>
+  <em:creator>Cedric Vivier</em:creator>
+  <em:homepageURL>https://developer.mozilla.org/en/Tools/Scratchpad</em:homepageURL>
+  <em:type>2</em:type><!-- type=extension -->
+  <em:targetApplication>
+    <Description><!-- Firefox -->
+      <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+      <em:minVersion>11.0.*</em:minVersion>
+      <em:maxVersion>15.0.*</em:maxVersion>
+    </Description>
+  </em:targetApplication>
+</Description>
+</RDF>

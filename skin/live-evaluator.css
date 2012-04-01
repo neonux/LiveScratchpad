@@ -96,11 +96,7 @@ dd[contenteditable] {
   text-align: right;
 }
 
-.declaration {
-  font-weight: bold;
-}
-
-.return {
+.declaration, .return {
   font-weight: bold;
 }
 

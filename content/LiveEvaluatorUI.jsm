@@ -299,6 +299,22 @@ LiveEvaluatorUI.prototype =
     return "";
   },
 
+  /**
+   * Retrieve the start offset and the end offset of a given line.
+   *
+   * @param number aLineNumber
+   *        Zero-based line number.
+   * @return [aRangeStart, aRangeEnd];
+   */
+  _getLineRange: function LEUI__getLineRange(aLineNumber)
+  {
+    if (!this.evaluator.editor.getLineStart) { // Fx<14
+      return [-1, -1];
+    }
+    return [this.evaluator.editor.getLineStart(aLineNumber),
+            this.evaluator.editor.getLineEnd(aLineNumber)];
+  },
+
   /*                                       */
   /* ILiveEvaluatorObserver implementation */
   /* @see LiveEvaluator.addObserver        */
@@ -360,11 +376,7 @@ LiveEvaluatorUI.prototype =
   {
     //TODO: ExceptionRepresenter that toggles stack trace display
     let ln = aException.lineNumber || -1;
-    let rangeStart, rangeEnd;
-    if (this.evaluator.editor.getLineStart) { // check for Fx<14 compatibility
-      rangeStart = this.evaluator.editor.getLineStart(ln -1);
-      rangeEnd = this.evaluator.editor.getLineEnd(ln - 1);
-    }
+    let [rangeStart, rangeEnd] = this._getLineRange(ln - 1);
     let item = this._createValueItem(aException.name, aException.message,
                                      rangeStart, rangeEnd);
     item.classList.add("exception");

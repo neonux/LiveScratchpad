@@ -368,7 +368,7 @@ LiveEvaluator.prototype = {
   {
     try {
       this._ast = esprima.parse(this.editor.getText(),
-                                {range: true, tolerant: true});
+                                {loc: true, range: true, tolerant: true});
       return true;
     } catch (ex) {
       this._parseError = ex;
@@ -1067,16 +1067,18 @@ ASTVisitor.prototype =
 
 /**
  * PrinterASTVisitor constructor.
+ *
  * This object allows to generate source code for the AST nodes it visits.
  * The source is generated via a string buffer that accumulates until the source
  * is retrieved using toString.
+ * Generated source contains new lines according to the original node locations.
  *
  * @see toString
  */
 function PrinterASTVisitor()
 {
   this._visitor = new ASTVisitor(this);
-  this._buffer = [];
+  this._reset();
 }
 
 PrinterASTVisitor.prototype =
@@ -1091,12 +1093,28 @@ PrinterASTVisitor.prototype =
    */
   visit: function PAV_visit(aNode, _aToken)
   {
-    if (!aNode || !_aToken || aNode.length === undefined) {
+    if (!aNode) {
+      return;
+    }
+
+    if (!_aToken || aNode.length === undefined) {
+      while (aNode.loc && this._line < aNode.loc.start.line) {
+        this._buffer.push("\n");
+        this._line++;
+      }
       return this._visitor.visit(aNode);
     }
 
     for (let i = 0; i < aNode.length; ++i) {
-      this._visitor.visit(aNode[i]);
+      let node = aNode[i];
+      if (!node) {
+        continue;
+      }
+      while (node.loc && this._line < node.loc.start.line) {
+        this._buffer.push("\n");
+        this._line++;
+      }
+      this._visitor.visit(node);
       if (i != aNode.length - 1) {
         this._buffer.push(_aToken);
       }
@@ -1111,8 +1129,17 @@ PrinterASTVisitor.prototype =
   toString: function PAV_toString()
   {
     let result = this._buffer.join(" ");
-    this._buffer = [];
+    this._reset();
     return result;
+  },
+
+  /**
+   * Reset string buffer.
+   */
+  _reset: function PAV__reset()
+  {
+    this._line = 1;
+    this._buffer = [];
   },
 
   /*                      */

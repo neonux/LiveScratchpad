@@ -66,6 +66,7 @@ function LiveEvaluatorUI(aRoot)
 
   this._onArgumentClickBinding = this._onArgumentClick.bind(this);
   this._onArgumentInputBinding = this._onArgumentInput.bind(this);
+  this._onArgumentKeyDownBinding = this._onArgumentKeyDown.bind(this);
   this._onMouseOverBinding = this._onMouseOver.bind(this);
 
   this._setup();
@@ -138,6 +139,46 @@ LiveEvaluatorUI.prototype =
   },
 
   /**
+   * Called when a key has been pressed in an argument input element.
+   *
+   * @param DOMEvent aEvent
+   */
+  _onArgumentKeyDown: function LEUI__onArgumentKeyDown(aEvent)
+  {
+    switch (aEvent.keyCode) {
+    case aEvent.DOM_VK_ENTER:
+    case aEvent.DOM_VK_RETURN:
+      aEvent.target.blur();
+      aEvent.preventDefault();
+      break;
+    }
+
+    // number adjustment key bindings
+    if (aEvent.altKey) {
+      let target = aEvent.target;
+      let value = parseFloat(target.textContent);
+      if (!isNaN(value)) {
+        switch (aEvent.keyCode) {
+        case aEvent.DOM_VK_UP:
+          value += 1;
+          break;
+        case aEvent.DOM_VK_DOWN:
+          value -= 1;
+          break;
+        case aEvent.DOM_VK_PAGE_UP:
+          value *= 2;
+          break;
+        case aEvent.DOM_VK_PAGE_DOWN:
+          value /= 2;
+          break;
+        }
+        target.textContent = value.toString();
+        this._onArgumentInput(aEvent);
+      }
+    }
+  },
+
+  /**
    * Called when the cursor enters over a list item.
    *
    * @param DOMMouseEvent aEvent
@@ -195,15 +236,7 @@ LiveEvaluatorUI.prototype =
                                                   aNode.range[0], aNode.range[1]);
     item.dataset.argumentIndex = aIndex;
     item.addEventListener("input", this._onArgumentInputBinding, false);
-    item.addEventListener("keydown", function onArgumentKeyDown(aEvent) {
-      switch (aEvent.keyCode) {
-      case aEvent.DOM_VK_ENTER:
-      case aEvent.DOM_VK_RETURN:
-        aEvent.target.blur();
-        aEvent.preventDefault();
-        break;
-      }
-    }, false);
+    item.addEventListener("keydown", this._onArgumentKeyDownBinding, false);
 
     valueContainer.setAttribute("contenteditable", "");
     valueContainer.textContent = "undefined";

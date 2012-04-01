@@ -257,15 +257,18 @@ LiveEvaluatorUI.prototype =
     item.dataset.rangeEnd = aRangeEnd;
     item.addEventListener("mouseover", this._onMouseOverBinding, false);
 
-    let container = this._document.createElementNS(HTML_NS, "div");
-    let nameContainer = this._document.createElementNS(HTML_NS, "dt");
-    nameContainer.textContent = aName;
+    let valueContainer = null;
+    if (aName) {
+      let container = this._document.createElementNS(HTML_NS, "div");
+      let nameContainer = this._document.createElementNS(HTML_NS, "dt");
+      nameContainer.textContent = aName;
 
-    let valueContainer = this._document.createElementNS(HTML_NS, "dd");
+      valueContainer = this._document.createElementNS(HTML_NS, "dd");
 
-    container.appendChild(nameContainer);
-    container.appendChild(valueContainer);
-    item.appendChild(container);
+      container.appendChild(nameContainer);
+      container.appendChild(valueContainer);
+      item.appendChild(container);
+    }
     return [item, valueContainer];
   },
 
@@ -411,6 +414,13 @@ LiveEvaluatorUI.prototype =
     let item = this._createValueItem("return", aValue, aRangeStart, aRangeEnd);
     item.classList.add("return");
     item.querySelector("dt").classList.add("token_keyword");
+    this._funcEventsList.appendChild(item);
+  },
+
+  onLoopEvent: function LEO_onLoopEvent(aEvaluator, aRangeStart, aRangeEnd, aEventType)
+  {
+    let [item, valueContainer] = this._createItem(null, aRangeStart, aRangeEnd);
+    item.className = "loop " + aEventType;
     this._funcEventsList.appendChild(item);
   },
 

@@ -273,11 +273,15 @@ LiveEvaluator.prototype = {
                              [aValue, aRangeStart, aRangeEnd, aEventType, aName]);
       return aValue;
     }.bind(this), RecorderFunctionNames.VARIABLE_EVENT);
+
     aSandbox.importFunction(function __return(aValue, aRangeStart, aRangeEnd) {
-      this._triggerObservers("ReturnEvent",
-                             [aValue, aRangeStart, aRangeEnd]);
+      this._triggerObservers("ReturnEvent", [aValue, aRangeStart, aRangeEnd]);
       return aValue;
     }.bind(this), RecorderFunctionNames.RETURN_EVENT);
+
+    aSandbox.importFunction(function __loop(aRangeStart, aRangeEnd, aEventType) {
+      this._triggerObservers("LoopEvent", [aRangeStart, aRangeEnd, aEventType]);
+    }.bind(this), RecorderFunctionNames.LOOP_EVENT);
   },
 
   /**
@@ -295,7 +299,7 @@ LiveEvaluator.prototype = {
    *                                       AbortEvaluationReason aReason,
    *                                       {Error} aError)
    *
-   *   onVariableEvent:        Called when a variable gets assigned to.
+   *   onVariableEvent:        Called when a variable gets assigned/updated.
    *                           Arguments: (LiveEvaluator aEvaluator,
    *                                       any aValue,
    *                                       Number aRangeStart,
@@ -308,6 +312,12 @@ LiveEvaluator.prototype = {
    *                                       any aValue,
    *                                       Number aRangeStart,
    *                                       Number aRangeEnd)
+   *
+   *   onLoopEvent:            Called when a loop event occurs.
+   *                           Arguments: (LiveEvaluator evaluator,
+   *                                       Number aRangeStart,
+   *                                       Number aRangeEnd,
+   *                                       string aEventType)
    * }
    *
    * All observer methods are optional.
@@ -1540,6 +1550,25 @@ InstrumenterASTVisitor.prototype =
     if ((!aNode.test || aNode.test.type == "Identifier")
         || (!aNode.update || aNode.update.type == "Identifier")) {
       this._hasInfiniteLoop = true;
+    }
+
+    let recorderCall = {
+      type: "ExpressionStatement",
+      expression: {
+        type: "CallExpression",
+        callee: {type: "Identifier", name: RecorderFunctionNames.LOOP_EVENT},
+        arguments: [
+          {type: "Literal", value: aNode.range[0]},
+          {type: "Literal", value: aNode.range[1]},
+          {type: "Literal", value: LoopEventType.ITERATION}
+        ]
+      }
+    };
+
+    if (aNode.body.body) {
+      aNode.body.body.unshift(recorderCall);
+    } else {
+      aNode.body = {type: "BlockStatement", body: [recorderCall, aNode.body]};
     }
   }
 };

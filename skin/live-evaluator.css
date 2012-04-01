@@ -122,6 +122,11 @@ dd.full ol {
   color: green;
 }
 
+.loop.iteration {
+  height: 0.4em;
+  border-bottom: 1px dotted white;
+}
+
 ol.abort-reasons > li {
   display: none;
   margin-top: 2em;

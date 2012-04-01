@@ -169,11 +169,10 @@ LiveEvaluatorUI.prototype =
     item.addEventListener("mouseover", this._onMouseOverBinding, false);
 
     let container = this._document.createElementNS(HTML_NS, "div");
-    let nameContainer = this._document.createElementNS(HTML_NS, "span");
+    let nameContainer = this._document.createElementNS(HTML_NS, "dt");
     nameContainer.textContent = aName;
 
-    let valueContainer = this._document.createElementNS(HTML_NS, "span");
-    valueContainer.className = "value";
+    let valueContainer = this._document.createElementNS(HTML_NS, "dd");
 
     container.appendChild(nameContainer);
     container.appendChild(valueContainer);
@@ -374,7 +373,7 @@ LiveEvaluatorUI.prototype =
   {
     let item = this._createValueItem("return", aValue, aRangeStart, aRangeEnd);
     item.classList.add("return");
-    item.querySelector("span").classList.add("token_keyword");
+    item.querySelector("dt").classList.add("token_keyword");
     this._funcEventsList.appendChild(item);
   },
 

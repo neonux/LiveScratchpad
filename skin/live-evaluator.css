@@ -35,7 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-.token_number {   /*FIXME: this should be the Orion theme, see bug 740354 */
+/*FIXME: this should be in the Orion theme, see bug 740354 */
+.token_number {
   color: #174f8a; /* dark blue */
 }
 
@@ -43,7 +44,7 @@ body {
   position: fixed;
   margin: 0;
   padding: 0;
-  padding-right: 8px;
+  padding-right: 4px;
   top: 0;
   bottom: 0;
   left: 8px;
@@ -58,20 +59,13 @@ body > ol {
   padding-left: 1ex;
 }
 
-/* TODO: dt for event name, dd(s) for value/repr (dd.compact + dd.full) */
-dt, dd {
-  margin: 0;
-  padding: 0;
+li {
+  width: 100%;
 }
 
-.function-arguments span:first-of-type {
-  font-style: italic;
-}
-
-div {
+li > div {
+  width: 100%;
   clear: both;
-  margin: 0;
-  padding: 0;
   padding-top: 2px;
   padding-bottom: 2px;
 }
@@ -79,19 +73,33 @@ li:hover > div {
   background: #cddae5; /*FIXME:*/
 }
 
-span {
-  min-height: 1em;
+dt, dd {
+  margin: 0;
+  padding: 0;
 }
-span[contenteditable] {
+
+dd {
+  padding-right: 1ex;
+}
+dd[contenteditable] {
+  min-width: 10ex; /* enough room for undefined (the default value) */
+  min-height: 1em;
   padding-top: 1px;
   padding-bottom: 1px;
-}
-span.value {
-  float: right;
-  text-align: right;
-  min-width: 10ex; /* enough room for undefined (the default value) */
   padding-left: 1ex;
-  padding-right: 1ex;
+}
+
+.function-arguments dt,
+.function-events dt {
+  float: left;
+}
+
+.function-arguments dt {
+  font-style: italic;
+}
+.function-arguments > li dd:first-of-type,
+.function-events > li dd:first-of-type {
+  text-align: right;
 }
 
 .declaration {
@@ -102,7 +110,7 @@ span.value {
   font-weight: bold;
 }
 
-.exception span:first-of-type {
+.exception dt {
   font-weight: bold;
   color: red;
 }
@@ -118,6 +126,9 @@ ol.abort-reasons > li {
 ol.abort-reasons dt {
   color: red;
   margin-bottom: 1em;
+}
+ol.abort-reasons dd {
+  display: block;
 }
 
 body[data-abort-reason=NO_FUNCTION] li[data-abort-reason=NO_FUNCTION],

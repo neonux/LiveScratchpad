@@ -71,13 +71,19 @@
       </li>
       <li class="return"><div><span class="token_keyword">return</span><span class="value number">42</span></div></a>
     </ol>
-    <div class="abort-reason" data-abort-reason="NO_FUNCTION">
-      <dt>No function to evaluate</dt>
-      <dd>Move the editor caret inside a function to start evaluation.</dd>
-    </div>
-    <div class="abort-reason" data-abort-reason="PARSE_ERROR">
-      <dt>Syntax error</dt>
-      <dd></dd>
-    </div>
+    <ol class="abort-reasons">
+      <li data-abort-reason="NO_FUNCTION">
+        <div>
+          <dt>No function to evaluate</dt>
+          <dd>Move the editor caret inside a function and start typing.</dd>
+        </div>
+      </li>
+      <li data-abort-reason="PARSE_ERROR">
+        <div>
+          <dt>Syntax error</dt>
+          <dd></dd>
+        </div>
+      </li>
+    </ol>
   </body>
 </html>

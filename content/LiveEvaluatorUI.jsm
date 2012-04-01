@@ -62,6 +62,7 @@ function LiveEvaluatorUI(aRoot)
   this._document = aRoot.ownerDocument;
   this._funcArgumentsList = this._root.querySelector(".function-arguments");
   this._funcEventsList = this._root.querySelector(".function-events");
+  this._parseErrorItem = this._root.querySelector("li[data-abort-reason=PARSE_ERROR]");
 
   this._onArgumentClickBinding = this._onArgumentClick.bind(this);
   this._onArgumentInputBinding = this._onArgumentInput.bind(this);
@@ -99,8 +100,10 @@ LiveEvaluatorUI.prototype =
    */
   _setup: function LEUI__setup()
   {
-    this._root.querySelector(".function-arguments").addEventListener("click",
-      this._onArgumentClickBinding, false);
+    this._funcArgumentsList.addEventListener("click",
+                                             this._onArgumentClickBinding, false);
+    this._parseErrorItem.addEventListener("mouseover",
+                                          this._onMouseOverBinding, false);
   },
 
   /**
@@ -353,7 +356,10 @@ LiveEvaluatorUI.prototype =
     //FIXME: dependency on Reason enum, better reporting, show error location in editor
     this._root.dataset.abortReason = aReason;
     if (aReason == "PARSE_ERROR") {
-      this._root.querySelector("div[data-abort-reason=PARSE_ERROR] > dd").textContent = aError.toString();
+      this._parseErrorItem.querySelector("dd").textContent = aError.message;
+      let [rangeStart, rangeEnd] = this._getLineRange(aError.lineNumber - 1);
+      this._parseErrorItem.dataset.rangeStart = rangeStart;
+      this._parseErrorItem.dataset.rangeEnd = rangeEnd - 1;
     }
   },
 

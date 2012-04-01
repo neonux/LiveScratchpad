@@ -58,6 +58,12 @@ body > ol {
   padding-left: 1ex;
 }
 
+/* TODO: dt for event name, dd(s) for value/repr (dd.compact + dd.full) */
+dt, dd {
+  margin: 0;
+  padding: 0;
+}
+
 .function-arguments span:first-of-type {
   font-style: italic;
 }
@@ -105,25 +111,20 @@ span.value {
   color: green;
 }
 
-div.abort-reason {
+ol.abort-reasons > li {
   display: none;
   margin-top: 2em;
 }
-body[data-abort-reason=NO_FUNCTION] > div[data-abort-reason=NO_FUNCTION] {
-  display: block;
-}
-body[data-abort-reason=PARSE_ERROR] > div[data-abort-reason=PARSE_ERROR] {
-  display: block;
-}
-body[data-abort-reason] > ol {
-  display: none;
-}
-
-div.abort-reason > dt {
+ol.abort-reasons dt {
   color: red;
   margin-bottom: 1em;
 }
-dt, dd {
-  margin: 0;
-  padding: 0;
+
+body[data-abort-reason=NO_FUNCTION] li[data-abort-reason=NO_FUNCTION],
+body[data-abort-reason=PARSE_ERROR] li[data-abort-reason=PARSE_ERROR] {
+  display: block;
+}
+
+body[data-abort-reason] > ol:not(.abort-reasons) {
+  display: none;
 }

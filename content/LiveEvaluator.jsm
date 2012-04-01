@@ -329,7 +329,7 @@ LiveEvaluator.prototype = {
   {
     let index = this._observers.indexOf(aObserver);
     if (index != -1) {
-      this._observer.splice(index, 1);
+      this._observers.splice(index, 1);
     }
   },
 

@@ -90,6 +90,7 @@ dd.collapsed ~ dd.full {
 }
 dd.full {
   font-weight: normal;
+  padding-right: 0;
 }
 dd.full ol {
   border-left: 1px dotted gray;

@@ -119,7 +119,7 @@ LiveEvaluatorUI.prototype =
       node = node.parentNode;
     }
     if (node) {
-      node.querySelector(".value").focus();
+      node.querySelector("dd").focus();
     }
   },
 
@@ -131,7 +131,7 @@ LiveEvaluatorUI.prototype =
   _onArgumentInput: function LEUI__onArgumentInput(aEvent)
   {
     let el = aEvent.target;
-    el.className = "value " + this._getTokenStyle(el.textContent);
+    el.className = this._getTokenStyle(el.textContent);
 
     this.evaluator.setArgument(el.parentNode.parentNode.dataset.argumentIndex,
                                el.textContent);
@@ -240,8 +240,7 @@ LiveEvaluatorUI.prototype =
 
     valueContainer.setAttribute("contenteditable", "");
     valueContainer.textContent = "undefined";
-    valueContainer.className = "value "
-                               + this._getTokenStyle(valueContainer.textContent);
+    valueContainer.className = this._getTokenStyle(valueContainer.textContent);
     return item;
   },
 

@@ -536,7 +536,11 @@ ObjectRepresenter.prototype =
     item.setUserData(this.USER_DATA_OBJECT, aValue, null);
 
     aValueContainer.classList.add("actionable");
-    aValueContainer.textContent = aValue.toString();
+    if (Object.prototype.toString.call(aValue) == "[object Array]") {
+      aValueContainer.textContent = "[" + (aValue.length ? "..." : "") + "]";
+    } else {
+      aValueContainer.textContent = aValue.toString();
+    }
     aValueContainer.addEventListener("click", this._onClickBinding, false);
     return true;
   },

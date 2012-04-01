@@ -39,6 +39,7 @@
  %liveEvaluatorDTD;
 ]>
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://LiveScratchpad/skin/overlay.css" type="text/css"?>
 <overlay id="live-evaluator-scratchpad-overlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <commandset id="sp-commandset">

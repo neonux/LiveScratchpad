@@ -80,7 +80,7 @@ dd[contenteditable] {
   padding-left: 1ex;
 }
 
-dd.multiple {
+dd.actionable {
   cursor: pointer;
   text-decoration: underline;
   -moz-text-decoration-style: dotted;

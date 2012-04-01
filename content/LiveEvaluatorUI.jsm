@@ -39,6 +39,9 @@
 
 const EXPORTED_SYMBOLS = ["LiveEvaluatorUI"];
 
+const Cu = Components.utils;
+Cu.import("resource://gre/modules/Services.jsm");
+
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const QUOTED_STRING_RE = /^["'].*["']$/;
 
@@ -48,12 +51,14 @@ const QUOTED_STRING_RE = /^["'].*["']$/;
  * This provides UI to represent the attached LiveEvaluator's events to a human.
  * Technicially, this is an implementation of ILiveEvaluatorObserver.
  *
+ * @param DOMWindow aOwnerWindow
  * @param DOMElement aRoot
  * @see evaluator
  * @see LiveEvaluator.addObserver
  */
-function LiveEvaluatorUI(aRoot)
+function LiveEvaluatorUI(aOwnerWindow, aRoot)
 {
+  this._ownerWindow = aOwnerWindow;
   this._root = aRoot;
   this._evaluator = null;
 
@@ -77,6 +82,11 @@ function LiveEvaluatorUI(aRoot)
 
 LiveEvaluatorUI.prototype =
 {
+  /**
+   * Retrieve the owner window of the UI.
+   */
+  get ownerWindow() this._ownerWindow,
+
   /**
    * Retrieve the attached evaluator.
    * @return LiveEvaluator
@@ -525,7 +535,7 @@ ObjectRepresenter.prototype =
     let item = AbstractRepresenter.getItemNode(aValueContainer);
     item.setUserData(this.USER_DATA_OBJECT, aValue, null);
 
-    aValueContainer.classList.add("multiple");
+    aValueContainer.classList.add("actionable");
     aValueContainer.textContent = aValue.toString();
     aValueContainer.addEventListener("click", this._onClickBinding, false);
     return true;
@@ -564,15 +574,23 @@ ObjectRepresenter.prototype =
 
 /**
  * DOMElementRepresenter constructor.
- * This representer displays DOM elements values.
+ * This representer displays DOM elements values, click to inspect element.
  */
-function DOMElementRepresenter()
+function DOMElementRepresenter(aUI)
 {
+  this._UI = aUI;
+  this._onClickBinding = this._onClick.bind(this);
 }
 
 DOMElementRepresenter.prototype =
 {
   USER_DATA_ELEMENT: "scratchpad:element",
+
+  get inspectorUI()
+  {
+    let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    return browserWindow ? browserWindow.InspectorUI : null;
+  },
 
   representValue: function DER_representValue(aValue, aValueContainer)
   {
@@ -583,6 +601,7 @@ DOMElementRepresenter.prototype =
     let item = AbstractRepresenter.getItemNode(aValueContainer);
     item.setUserData(this.USER_DATA_ELEMENT, aValue, null);
 
+    aValueContainer.classList.add("actionable");
     aValueContainer.classList.add("element");
     let elementRepr = aValue.nodeName.toLowerCase();
     if (aValue.id) {
@@ -594,6 +613,31 @@ DOMElementRepresenter.prototype =
       }
     }
     aValueContainer.textContent = elementRepr;
+    aValueContainer.addEventListener("click", this._onClickBinding, false);
     return true;
+  },
+
+  _onClick: function OR__onClick(aEvent)
+  {
+    let valueContainer = aEvent.currentTarget;
+    let item = AbstractRepresenter.getItemNode(valueContainer);
+    let el = item.getUserData(this.USER_DATA_ELEMENT);
+    if (this.inspectorUI) {
+      if (!this.inspectorUI.isInspectorOpen) {
+        this.inspectorUI.openInspectorUI(el);
+      } else {
+        if (this.inspectorUI.selection != el) {
+          this.inspectorUI.select(el, true, true, "scratchpad");
+        } else {
+          this.inspectorUI.closeInspectorUI();
+        }
+      }
+
+      //FIXME: workaround inspector forcing focus to the browser window!
+      //       this should be the caller responsibility to focus it if desired
+      this._UI.ownerWindow.setTimeout(function () {
+        this._UI.ownerWindow.focus();
+      }.bind(this), 0);
+    }
   }
 };

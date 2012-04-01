@@ -130,7 +130,8 @@
       };
 
       let initializeUI = function () {
-        this.evaluatorUI = new LiveEvaluatorUI(this.iframe.contentDocument.body);
+        this.evaluatorUI = new LiveEvaluatorUI(
+          window, this.iframe.contentDocument.body);
         this.evaluatorUI.evaluator = this.evaluator;
       }.bind(this);
 

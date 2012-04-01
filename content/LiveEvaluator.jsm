@@ -1389,18 +1389,19 @@ PrinterASTVisitor.prototype =
   },
 
   onLiteral: function (aNode) {
-    let isString = typeof(aNode.value) == "string";
+    let value = aNode.value;
+    let isString = typeof(value) == "string";
     if (!isString) {
-      if (aNode.value === null) {
+      if (value === null) {
         this._buffer.push("null");
-      } else if (aNode.value === "undefined") {
+      } else if (value === undefined) {
         this._buffer.push("undefined");
       } else {
-        this._buffer.push(aNode.value.toString());
+        this._buffer.push(value.toString());
       }
     } else {
       //FIXME: escape?
-      this._buffer.push('"' + aNode.value + '"');
+      this._buffer.push('"' + value + '"');
     }
   }
 };
@@ -1447,7 +1448,7 @@ InstrumenterASTVisitor.prototype =
   _wrapExpression: function IAV__wrapExpression(aExpression, aParentNode, aRecorder, aArgs)
   {
     let args = [
-      aExpression,
+      aExpression || {type: "Literal", value: undefined},
       {type: "Literal", value: aParentNode.range[0]},
       {type: "Literal", value: aParentNode.range[1]}
     ];

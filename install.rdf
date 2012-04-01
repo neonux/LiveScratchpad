@@ -3,10 +3,10 @@
 <Description about="urn:mozilla:install-manifest">
   <em:id>devtools-LiveScratchpad@mozilla.com</em:id>
   <em:name>Live Scratchpad</em:name>
-  <em:version>0.1.0</em:version>
+  <em:version>0.2.0</em:version>
   <em:description>Evaluate your JavaScript functions in real-time while editing in the Scratchpad.</em:description>
   <em:creator>Cedric Vivier</em:creator>
-  <em:homepageURL>https://developer.mozilla.org/en/Tools/Scratchpad</em:homepageURL>
+  <em:homepageURL>http://neonux.github.com/LiveScratchpad</em:homepageURL>
   <em:type>2</em:type><!-- type=extension -->
   <em:targetApplication>
     <Description><!-- Firefox -->

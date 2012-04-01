@@ -69,6 +69,11 @@ function LiveEvaluatorUI(aRoot)
   this._onArgumentKeyDownBinding = this._onArgumentKeyDown.bind(this);
   this._onMouseOverBinding = this._onMouseOver.bind(this);
 
+  this._representers = [];
+  this.registerRepresenter(new PrimitiveRepresenter());
+  this.registerRepresenter(new ObjectRepresenter());
+  this.registerRepresenter(new DOMElementRepresenter());
+
   this._setup();
 }
 
@@ -93,6 +98,41 @@ LiveEvaluatorUI.prototype =
     this._evaluator = aEvaluator;
     if (this._evaluator) {
       this._evaluator.addObserver(this);
+    }
+  },
+
+  /**
+   * Register a representer.
+   *
+   * Representer objects are responsible for generating the visual presentation
+   * of an evaluation event.
+   * Events are attempted to be presented by representers in reverse order of
+   * registration (eg. the latest registered representer can override presentation
+   * of any value if desired).
+   *
+   * ILiveEvaluatorUIRepresenter {
+   *   // request to represent the given value into the given container.
+   *   // returns true if the value has been presented, false otherwise.
+   *   boolean representValue(any aValue, DOMElement aValueContainer)
+   * }
+   *
+   * @param ILiveEvaluatorUIRepresenter aRepresenter
+   */
+  registerRepresenter: function LEUI_registerRepresenter(aRepresenter)
+  {
+    this._representers.push(aRepresenter);
+  },
+
+  /**
+   * Unregister a representer.
+   *
+   * @param ILiveEvaluatorUIRepresenter aRepresenter
+   */
+  unregisterRepresenter: function LEUI_unregisterRepresenter(aRepresenter)
+  {
+    let index = this._representers.indexOf(aRepresenter);
+    if (index != -1) {
+      this._representers.splice(index, 1);
     }
   },
 
@@ -256,53 +296,10 @@ LiveEvaluatorUI.prototype =
   _createValueItem: function LEUI__createValueItem(aName, aValue, aRangeStart, aRangeEnd)
   {
     let [item, valueContainer] = this._createItem(aName, aRangeStart, aRangeEnd);
-
-    //TODO: extract to Representer objects >> creates the item?
-    //      bool representer.apply(item, valueContainer)
-    //           click/hover should be handled by the Representer
-    //      + add a registerVisualizer API to allow add-ons with custom repr
-    //      LiveEvaluatorUI.registerRepresenter(representer);
-    switch (typeof(aValue)) {
-    case "undefined":
-    case "boolean":
-      valueContainer.classList.add("token_keyword");
-      valueContainer.textContent = aValue === undefined
-                                   ? "undefined" : aValue.toString();
-      break;
-    case "object":
-      if (aValue === null) {
-        valueContainer.classList.add("token_keyword");
-        valueContainer.textContent = "null";
-      } else {
-        if (aValue instanceof Components.interfaces.nsIDOMElement) {
-          item.setUserData(USER_DATA_ELEMENT, aValue, null);
-          valueContainer.classList.add("element");
-          let elementRepr = aValue.nodeName.toLowerCase();
-          if (aValue.id) {
-            elementRepr += "#" + aValue.id;
-          }
-          if (aValue.classList.length) {
-            for (var i = 0; i < aValue.classList.length; ++i) {
-              elementRepr += "." + aValue.classList[i];
-            }
-          }
-          valueContainer.textContent = elementRepr;
-        } else {
-          //TODO: collapsed JSON => open panel?
-          valueContainer.textContent = aValue.toString();
-        }
+    for (var i = this._representers.length - 1; i >= 0; i--) {
+      if (this._representers[i].representValue(aValue, valueContainer)) {
+        break; // we got a presentation!
       }
-
-      break;
-    case "number":
-      valueContainer.classList.add(isNaN(aValue)
-                                   ? "token_keyword" : "token_number");
-      valueContainer.textContent = aValue.toString();
-      break;
-    case "string":
-      valueContainer.classList.add("token_string");
-      valueContainer.textContent = '"' + aValue + '"';
-      break;
     }
     return item;
   },
@@ -418,5 +415,109 @@ LiveEvaluatorUI.prototype =
                                      rangeStart, rangeEnd);
     item.classList.add("exception");
     this._funcEventsList.appendChild(item);
+  }
+};
+
+/*                       */
+/* built-in representers */
+
+var AbstractRepresenter = {
+  getItemNode: function R_getItemNode(aValueContainer)
+  {
+    return aValueContainer.parentNode.parentNode;
+  }
+};
+
+/**
+ * PrimitiveRepresenter constructor.
+ * This representer displays primitive JS values (ie. not objects)
+ */
+function PrimitiveRepresenter()
+{
+}
+
+PrimitiveRepresenter.prototype =
+{
+  representValue: function PR_representValue(aValue, aValueContainer)
+  {
+    switch (typeof(aValue)) {
+    case "undefined":
+    case "boolean":
+      aValueContainer.classList.add("token_keyword");
+      aValueContainer.textContent = aValue === undefined
+                                   ? "undefined" : aValue.toString();
+      return true;
+    case "object":
+      if (aValue === null) {
+        aValueContainer.classList.add("token_keyword");
+        aValueContainer.textContent = "null";
+        return true;
+      }
+      break;
+    case "number":
+      aValueContainer.classList.add(isNaN(aValue)
+                                   ? "token_keyword" : "token_number");
+      aValueContainer.textContent = aValue.toString();
+      return true;
+    case "string":
+      aValueContainer.classList.add("token_string");
+      aValueContainer.textContent = '"' + aValue + '"';
+      return true;
+    }
+    return false;
+  }
+};
+
+/**
+ * ObjectRepresenter constructor.
+ * This representer displays JS object values.
+ */
+function ObjectRepresenter()
+{
+}
+
+ObjectRepresenter.prototype =
+{
+  representValue: function OR_representValue(aValue, aValueContainer)
+  {
+    if (!aValue || typeof(aValue) != "object") {
+      return false;
+    }
+    aValueContainer.textContent = aValue.toString();
+    return true;
+  }
+};
+
+/**
+ * DOMElementRepresenter constructor.
+ * This representer displays DOM elements values.
+ */
+function DOMElementRepresenter()
+{
+}
+
+DOMElementRepresenter.prototype =
+{
+  representValue: function DER_representValue(aValue, aValueContainer)
+  {
+    if (!(aValue instanceof Components.interfaces.nsIDOMElement)) {
+      return false;
+    }
+
+    let item = AbstractRepresenter.getItemNode(aValueContainer);
+    item.setUserData(USER_DATA_ELEMENT, aValue, null);
+
+    aValueContainer.classList.add("element");
+    let elementRepr = aValue.nodeName.toLowerCase();
+    if (aValue.id) {
+      elementRepr += "#" + aValue.id;
+    }
+    if (aValue.classList.length) {
+      for (var i = 0; i < aValue.classList.length; ++i) {
+        elementRepr += "." + aValue.classList[i];
+      }
+    }
+    aValueContainer.textContent = elementRepr;
+    return true;
   }
 };

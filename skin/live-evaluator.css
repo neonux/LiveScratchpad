@@ -64,9 +64,6 @@ li > div {
   padding-top: 2px;
   padding-bottom: 2px;
 }
-li:hover > div {
-  background: #cddae5; /*FIXME:*/
-}
 
 dt, dd {
   margin: 0;

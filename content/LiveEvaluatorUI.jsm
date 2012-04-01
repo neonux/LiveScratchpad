@@ -517,6 +517,10 @@ PrimitiveRepresenter.prototype =
       aValueContainer.classList.add("token_string");
       aValueContainer.textContent = '"' + aValue + '"';
       return true;
+    case "function":
+      aValueContainer.classList.add("token_keyword");
+      aValueContainer.textContent = "function";
+      return true;
     }
     return false;
   }

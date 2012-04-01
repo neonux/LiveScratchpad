@@ -80,6 +80,21 @@ dd[contenteditable] {
   padding-left: 1ex;
 }
 
+dd.multiple {
+  cursor: pointer;
+  text-decoration: underline;
+  -moz-text-decoration-style: dotted;
+}
+dd.collapsed ~ dd.full {
+  display: none;
+}
+dd.full {
+  font-weight: normal;
+}
+dd.full ol {
+  border-left: 1px dotted gray;
+}
+
 .function-arguments dt,
 .function-events dt {
   float: left;

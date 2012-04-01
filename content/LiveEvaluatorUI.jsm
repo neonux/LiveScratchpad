@@ -42,8 +42,6 @@ const EXPORTED_SYMBOLS = ["LiveEvaluatorUI"];
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const QUOTED_STRING_RE = /^["'].*["']$/;
 
-const USER_DATA_ELEMENT = "scratchpad:element";
-
 /**
  * LiveEvaluatorUI constructor.
  *
@@ -70,9 +68,9 @@ function LiveEvaluatorUI(aRoot)
   this._onMouseOverBinding = this._onMouseOver.bind(this);
 
   this._representers = [];
-  this.registerRepresenter(new PrimitiveRepresenter());
-  this.registerRepresenter(new ObjectRepresenter());
-  this.registerRepresenter(new DOMElementRepresenter());
+  this.registerRepresenter(new PrimitiveRepresenter(this));
+  this.registerRepresenter(new ObjectRepresenter(this));
+  this.registerRepresenter(new DOMElementRepresenter(this));
 
   this._setup();
 }
@@ -421,10 +419,46 @@ LiveEvaluatorUI.prototype =
 /*                       */
 /* built-in representers */
 
-var AbstractRepresenter = {
-  getItemNode: function R_getItemNode(aValueContainer)
+/**
+ * AbstractRepresenter provides helper methods for Representer objects.
+ */
+var AbstractRepresenter =
+{
+  /**
+   * Retrieve the parent item node for the given value container.
+   *
+   * @param DOMElement aValueContainer
+   */
+  getItemNode: function AR_getItemNode(aValueContainer)
   {
     return aValueContainer.parentNode.parentNode;
+  },
+
+  /**
+   * Add a new presentation container of a given name into the given item.
+   *
+   * @param string aName
+   *        The name of the presentation. This will be set as the class name
+   *        of the presentation container.
+   * @param DOMElement aItem
+   */
+  addPresentationContainer: function AR_addPresentationContainer(aName, aItem)
+  {
+    let container = aItem.ownerDocument.createElementNS(HTML_NS, "dd");
+    container.className = aName;
+    aItem.firstElementChild.appendChild(container);
+    return container;
+  },
+
+  /**
+   * Checks if the presentation container of given name exists inside given item.
+   *
+   * @param string aName
+   * @param DOMElement aItem
+   */
+  hasPresentationContainer: function AR_hasPresentationContainer(aName, aItem)
+  {
+    return !!aItem.querySelector("dd." + aName);
   }
 };
 
@@ -470,22 +504,62 @@ PrimitiveRepresenter.prototype =
 
 /**
  * ObjectRepresenter constructor.
- * This representer displays JS object values.
+ * This representer displays JS object values lazily and recursively (on click).
  */
-function ObjectRepresenter()
+function ObjectRepresenter(aUI)
 {
+  this._UI = aUI;
+  this._onClickBinding = this._onClick.bind(this);
 }
 
 ObjectRepresenter.prototype =
 {
+  USER_DATA_OBJECT: "scratchpad:object",
+
   representValue: function OR_representValue(aValue, aValueContainer)
   {
     if (!aValue || typeof(aValue) != "object") {
       return false;
     }
+
+    let item = AbstractRepresenter.getItemNode(aValueContainer);
+    item.setUserData(this.USER_DATA_OBJECT, aValue, null);
+
+    aValueContainer.classList.add("multiple");
     aValueContainer.textContent = aValue.toString();
+    aValueContainer.addEventListener("click", this._onClickBinding, false);
     return true;
-  }
+  },
+
+  _onClick: function OR__onClick(aEvent)
+  {
+    let valueContainer = aEvent.currentTarget;
+    let item = AbstractRepresenter.getItemNode(valueContainer);
+    if (!AbstractRepresenter.hasPresentationContainer("full", item)) {
+      this._createFullRepresentation(item);
+    } else {
+      valueContainer.classList.toggle("collapsed");
+    }
+  },
+
+  _createFullRepresentation: function OR__createFullRepresentation(aItem)
+  {
+    let container = AbstractRepresenter.addPresentationContainer("full", aItem);
+    let obj = aItem.getUserData(this.USER_DATA_OBJECT);
+    let list = aItem.ownerDocument.createElementNS(HTML_NS, "ol");
+    for (var key in obj) {
+      try {
+        list.appendChild(this._UI._createValueItem(key, obj[key]));
+      } catch (ex) {
+        /* swallow exceptions due to faulty getters */
+      }
+    }
+    if (list.children.length) {
+      container.appendChild(list);
+    } else {
+      container.textContent = "{}";
+    }
+  },
 };
 
 /**
@@ -498,6 +572,8 @@ function DOMElementRepresenter()
 
 DOMElementRepresenter.prototype =
 {
+  USER_DATA_ELEMENT: "scratchpad:element",
+
   representValue: function DER_representValue(aValue, aValueContainer)
   {
     if (!(aValue instanceof Components.interfaces.nsIDOMElement)) {
@@ -505,7 +581,7 @@ DOMElementRepresenter.prototype =
     }
 
     let item = AbstractRepresenter.getItemNode(aValueContainer);
-    item.setUserData(USER_DATA_ELEMENT, aValue, null);
+    item.setUserData(this.USER_DATA_ELEMENT, aValue, null);
 
     aValueContainer.classList.add("element");
     let elementRepr = aValue.nodeName.toLowerCase();

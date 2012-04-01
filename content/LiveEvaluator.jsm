@@ -237,6 +237,10 @@ LiveEvaluator.prototype = {
 
     // instrument the AST and generate instrumented source string from it
     this._instrumenterVisitor.visit(func);
+    if (this._instrumenterVisitor.hasInfiniteLoop) {
+      /* silently abort, it is likely the user is editing a for statement now */
+      return false;
+    }
     this._printerVisitor.visit(this._ast);
     let source = this._printerVisitor.toString();
     // append actual call to the function we instrumented
@@ -1428,8 +1432,16 @@ InstrumenterASTVisitor.prototype =
    */
   visit: function IAV_visit(aNode)
   {
+    this._hasInfiniteLoop = false;
     return this._visitor.visit(aNode);
   },
+
+  /**
+   * Returns true if the last visit encountered an infinite loop.
+   *
+   * @return boolean
+   */
+  get hasInfiniteLoop() this._hasInfiniteLoop,
 
   /**
    * Wrap an expression into a recorder function call expression.
@@ -1521,5 +1533,13 @@ InstrumenterASTVisitor.prototype =
     aNode.argument = this._wrapExpression(aNode.argument,
                                           aNode,
                                           RecorderFunctionNames.RETURN_EVENT);
+  },
+
+  onForStatement: function (aNode)
+  {
+    if ((!aNode.test || aNode.test.type == "Identifier")
+        || (!aNode.update || aNode.update.type == "Identifier")) {
+      this._hasInfiniteLoop = true;
+    }
   }
 };

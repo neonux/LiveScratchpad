@@ -44,7 +44,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const QUOTED_STRING_RE = /^["'].*["']$/;
+
 const DEADCODE_ANNOTATION = "scratchpad.deadcode";
+const LIVE_FUNCTION_ANNOTATION = "scratchpad.livefunction";
 
 /**
  * LiveEvaluatorUI constructor.
@@ -367,6 +369,7 @@ LiveEvaluatorUI.prototype =
     if (this._annotationAdded) {
       let annotationModel = aEvaluator.editor._annotationModel;
       annotationModel.removeAnnotations(DEADCODE_ANNOTATION);
+      annotationModel.removeAnnotations(LIVE_FUNCTION_ANNOTATION);
     }
   },
 
@@ -399,11 +402,20 @@ LiveEvaluatorUI.prototype =
       return; // Fx<14 compatibility
     } else if (!this._annotationAdded) {
       aEvaluator.editor._annotationStyler.addAnnotationType(DEADCODE_ANNOTATION);
+      aEvaluator.editor._annotationStyler.addAnnotationType(LIVE_FUNCTION_ANNOTATION);
       this._annotationAdded = true;
     }
 
     let annotationModel = aEvaluator.editor._annotationModel;
     annotationModel.removeAnnotations(DEADCODE_ANNOTATION);
+    annotationModel.removeAnnotations(LIVE_FUNCTION_ANNOTATION);
+
+    annotationModel.addAnnotation({
+      start: aNode.range[0],
+      end: aNode.range[0] + "function".length,
+      type: LIVE_FUNCTION_ANNOTATION,
+      rangeStyle: {styleClass: "token_keyword", style: {fontWeight: "bold"}},
+    });
 
     for (let branchRange in aEvaluator.branches) {
       if (!aEvaluator.branches[branchRange]) {

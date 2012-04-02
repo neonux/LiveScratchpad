@@ -48,6 +48,8 @@ const QUOTED_STRING_RE = /^["'].*["']$/;
 const DEADCODE_ANNOTATION = "scratchpad.deadcode";
 const LIVE_FUNCTION_ANNOTATION = "scratchpad.livefunction";
 
+const XRAY_DECORATION_RE = /^\[object XrayWrapper (.*)\]$/;
+
 /**
  * LiveEvaluatorUI constructor.
  *
@@ -595,7 +597,8 @@ ObjectRepresenter.prototype =
     if (Object.prototype.toString.call(aValue) == "[object Array]") {
       aValueContainer.textContent = "[" + (aValue.length ? "..." : "") + "]";
     } else {
-      aValueContainer.textContent = aValue.toString();
+      let value = aValue.toString();
+      aValueContainer.textContent = value.replace(XRAY_DECORATION_RE, "$1");
     }
     aValueContainer.addEventListener("click", this._onClickBinding, false);
     return true;

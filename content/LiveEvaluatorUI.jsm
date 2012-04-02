@@ -44,6 +44,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const QUOTED_STRING_RE = /^["'].*["']$/;
+const DEADCODE_ANNOTATION = "scratchpad.deadcode";
 
 /**
  * LiveEvaluatorUI constructor.
@@ -383,11 +384,30 @@ LiveEvaluatorUI.prototype =
 
   onStopEvaluation: function LEO_onStopEvaluation(aEvaluator, aNode)
   {
-    //TODO: calculate dead code sections here, gray them out
-    //      all within conditional not entered (need to instrument iteration,
-    //      consequent and alternate (add block if none?).
-    //      if tests => green|red (need to instrument tests)
-    //      clear all deadcode annotations in whole editor before evaluation
+    // annotate dead code
+    // FIXME: expose necessary SourceEditor API, do proper branch detection in
+    //        with additional necessary probes in the evaluator
+    if (!aEvaluator.editor._annotationStyler) {
+      return; // Fx<14 compatibility
+    } else if (!this._annotationAdded) {
+      aEvaluator.editor._annotationStyler.addAnnotationType(DEADCODE_ANNOTATION);
+      this._annotationAdded = true;
+    }
+
+    let annotationModel = aEvaluator.editor._annotationModel;
+    annotationModel.removeAnnotations(DEADCODE_ANNOTATION);
+
+    for (let branchRange in aEvaluator.branches) {
+      if (!aEvaluator.branches[branchRange]) {
+        branchRange = branchRange.split("-");
+        annotationModel.addAnnotation({
+          start: parseInt(branchRange[0]),
+          end: parseInt(branchRange[1]),
+          type: DEADCODE_ANNOTATION,
+          lineStyle: {style: {opacity: "0.5", fontStyle: "oblique"}}
+        });
+      }
+    }
   },
 
   onAbortEvaluation: function LEO_onAbortEvaluation(aEvaluator, aReason, aError)
@@ -417,11 +437,13 @@ LiveEvaluatorUI.prototype =
     this._funcEventsList.appendChild(item);
   },
 
-  onLoopEvent: function LEO_onLoopEvent(aEvaluator, aRangeStart, aRangeEnd, aEventType)
+  onBranchEvent: function LEO_onBranchEvent(aEvaluator, aRangeStart, aRangeEnd, aEventType)
   {
-    let [item, valueContainer] = this._createItem(null, aRangeStart, aRangeEnd);
-    item.className = "loop " + aEventType;
-    this._funcEventsList.appendChild(item);
+    if (aEventType == "iteration") {
+      let [item, valueContainer] = this._createItem(null, aRangeStart, aRangeEnd);
+      item.className = "loop " + aEventType;
+      this._funcEventsList.appendChild(item);
+    }
   },
 
   onUnhandledException: function LEO_onUnhandledException(aEvaluator, aException)

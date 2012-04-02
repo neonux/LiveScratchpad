@@ -53,7 +53,6 @@ const AbortEvaluationReason = {
 const RecorderFunctionNames = {
   BRANCH_EVENT: "__evaluator_branch",
   CALL_EVENT: "__evaluator_call",
-  LOOP_EVENT: "__evaluator_loop",
   RETURN_EVENT: "__evaluator_return",
   VARIABLE_EVENT: "__evaluator_var"
 };
@@ -64,7 +63,7 @@ const VariableEventType = {
   UPDATE: "update"
 };
 
-const LoopEventType = {
+const BranchEventType = {
   ENTER: "enter",
   ITERATION: "iteration",
   LEAVE: "leave"
@@ -218,6 +217,8 @@ LiveEvaluator.prototype = {
       return;
     }
 
+    //TODO: optimize, if there is no text change since last evaluation do not
+    //      parse, instrument, ...
     if (!this._parse()) {
       this._triggerObservers("AbortEvaluation",
                              [AbortEvaluationReason.PARSE_ERROR,
@@ -238,9 +239,10 @@ LiveEvaluator.prototype = {
     // instrument the AST and generate instrumented source string from it
     this._instrumenterVisitor.visit(func);
     if (this._instrumenterVisitor.hasInfiniteLoop) {
-      /* silently abort, it is likely the user is editing a for statement now */
+      // silently abort, it is likely the user is editing a for statement now
       return false;
     }
+    this.branches = this._instrumenterVisitor.branches; //FIXME: API?
     this._printerVisitor.visit(this._ast);
     let source = this._printerVisitor.toString();
     // append actual call to the function we instrumented
@@ -279,9 +281,13 @@ LiveEvaluator.prototype = {
       return aValue;
     }.bind(this), RecorderFunctionNames.RETURN_EVENT);
 
-    aSandbox.importFunction(function __loop(aRangeStart, aRangeEnd, aEventType) {
-      this._triggerObservers("LoopEvent", [aRangeStart, aRangeEnd, aEventType]);
-    }.bind(this), RecorderFunctionNames.LOOP_EVENT);
+    aSandbox.importFunction(function __branch(aRangeStart, aRangeEnd, aEventType) {
+      if (aEventType == BranchEventType.ENTER) {
+        this.branches[[aRangeStart, aRangeEnd].join("-")] = true;
+        return;
+      }
+      this._triggerObservers("BranchEvent", [aRangeStart, aRangeEnd, aEventType]);
+    }.bind(this), RecorderFunctionNames.BRANCH_EVENT);
   },
 
   /**
@@ -313,7 +319,7 @@ LiveEvaluator.prototype = {
    *                                       Number aRangeStart,
    *                                       Number aRangeEnd)
    *
-   *   onLoopEvent:            Called when a loop event occurs.
+   *   onBranchEvent:          Called when a branch event occurs.
    *                           Arguments: (LiveEvaluator evaluator,
    *                                       Number aRangeStart,
    *                                       Number aRangeEnd,
@@ -1148,7 +1154,7 @@ PrinterASTVisitor.prototype =
   },
 
   /**
-   * Reset string buffer.
+   * Reset the visitor to initial state.
    */
   _reset: function PAV__reset()
   {
@@ -1430,6 +1436,7 @@ PrinterASTVisitor.prototype =
 function InstrumenterASTVisitor()
 {
   this._visitor = new ASTVisitor(this);
+  this._reset();
 }
 
 InstrumenterASTVisitor.prototype =
@@ -1442,8 +1449,17 @@ InstrumenterASTVisitor.prototype =
    */
   visit: function IAV_visit(aNode)
   {
-    this._hasInfiniteLoop = false;
+    this._reset();
     return this._visitor.visit(aNode);
+  },
+
+  /**
+   * Reset the visitor to initial state.
+   */
+  _reset: function PAV__reset()
+  {
+    this._hasInfiniteLoop = false;
+    this._branches = {};
   },
 
   /**
@@ -1452,6 +1468,14 @@ InstrumenterASTVisitor.prototype =
    * @return boolean
    */
   get hasInfiniteLoop() this._hasInfiniteLoop,
+
+  /**
+   * Retrieve a dictionary of branches, every key is a string "<start>-<end>"
+   * with value false.
+   *
+   * @return object
+   */
+  get branches() this._branches,
 
   /**
    * Wrap an expression into a recorder function call expression.
@@ -1489,6 +1513,48 @@ InstrumenterASTVisitor.prototype =
       callee: {type: "Identifier", name: aRecorder},
       arguments: args
     };
+  },
+
+  /**
+   * Prepend a call inside a node with body.
+   *
+   * @param object aNodeWithBody
+   * @param string aRecorder
+   * @param string aEventType
+   */
+  _prependCall: function IAV__prependCall(aNodeWithBody, aRecorder, aEventType)
+  {
+    if (aNodeWithBody.type != "BlockStatement") {
+      if (aNodeWithBody.body.type != "BlockStatement") {
+        // move single statement body inside a block statement body
+        aNodeWithBody.body = {
+          type: "BlockStatement",
+          range: aNodeWithBody.range,
+          body: [aNodeWithBody.body]
+        };
+      }
+      this._prependCall(aNodeWithBody.body, aRecorder, aEventType);
+      return;
+    }
+
+    let recorderCall = {
+      type: "ExpressionStatement",
+      expression: {
+        type: "CallExpression",
+        callee: {type: "Identifier", name: aRecorder},
+        arguments: [
+          {type: "Literal", value: aNodeWithBody.range[0]},
+          {type: "Literal", value: aNodeWithBody.range[1]},
+          {type: "Literal", value: aEventType}
+        ]
+      }
+    };
+
+    if (!aNodeWithBody.body) {
+      aNodeWithBody.body = [recorderCall];
+    } else {
+      aNodeWithBody.body.unshift(recorderCall);
+    }
   },
 
   /*                      */
@@ -1552,23 +1618,20 @@ InstrumenterASTVisitor.prototype =
       this._hasInfiniteLoop = true;
     }
 
-    let recorderCall = {
-      type: "ExpressionStatement",
-      expression: {
-        type: "CallExpression",
-        callee: {type: "Identifier", name: RecorderFunctionNames.LOOP_EVENT},
-        arguments: [
-          {type: "Literal", value: aNode.range[0]},
-          {type: "Literal", value: aNode.range[1]},
-          {type: "Literal", value: LoopEventType.ITERATION}
-        ]
-      }
-    };
+    this._prependCall(aNode,
+                      RecorderFunctionNames.BRANCH_EVENT, BranchEventType.ITERATION);
+  },
 
-    if (aNode.body.body) {
-      aNode.body.body.unshift(recorderCall);
-    } else {
-      aNode.body = {type: "BlockStatement", body: [recorderCall, aNode.body]};
+  onBlockStatement: function (aNode)
+  {
+    if (!aNode.range) {
+      return; // ignore synthetic nodes
     }
+
+    //TODO: coalesce and probe after leave of return/continue/break branch
+    this._branches[aNode.range.join("-")] = false;
+
+    this._prependCall(aNode,
+                      RecorderFunctionNames.BRANCH_EVENT, BranchEventType.ENTER);
   }
 };

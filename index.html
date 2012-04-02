@@ -3,30 +3,33 @@
 <head>
   <meta charset='utf-8'>
 
-  <title>neonux/LiveScratchpad @ GitHub</title>
+  <title>Live Scratchpad add-on for the Firefox Scratchpad</title>
 
   <style type="text/css">
     body {
       margin-top: 1.0em;
-      background-color: #27365a;
+      background-color: #f0f0ff;
       font-family: Helvetica, Arial, FreeSans, san-serif;
-      color: #ffffff;
+      color: black;
     }
     #container {
       margin: 0 auto;
-      width: 700px;
+      width: 850px;
     }
-    h1 { font-size: 3.8em; color: #d8c9a5; margin-bottom: 3px; }
+    h1 { font-size: 3.8em; color: #dd0058; margin-bottom: 3px; }
     h1 .small { font-size: 0.4em; }
     h1 a { text-decoration: none }
-    h2 { font-size: 1.5em; color: #d8c9a5; }
-    h3 { text-align: center; color: #d8c9a5; }
-    a { color: #d8c9a5; }
+    h2 { font-size: 1.5em; color: #dd0058; }
+    h3 { text-align: center; color: #dd0058; }
+    a { color: #dd0058; }
     .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
     .download { float: right; }
     pre { background: #000; color: #fff; padding: 15px;}
     hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
     .footer { text-align:center; padding-top:30px; font-style: italic; }
+    img {
+      border: 2px dotted #dd0058;
+    }
   </style>
 </head>
 
@@ -34,65 +37,43 @@
   <a href="https://github.com/neonux/LiveScratchpad"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
 
   <div id="container">
-
-    <div class="download">
-      <a href="https://github.com/neonux/LiveScratchpad/zipball/master">
-        <img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
-      <a href="https://github.com/neonux/LiveScratchpad/tarball/master">
-        <img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
-    </div>
-
-    <h1><a href="https://github.com/neonux/LiveScratchpad">LiveScratchpad</a>
-      <span class="small">by <a href="https://github.com/neonux">neonux</a></span></h1>
+    <h1><a href="https://github.com/neonux/LiveScratchpad">Live Scratchpad</a></h1>
 
     <div class="description">
-      Evaluate your JavaScript functions live while editing.
+      Evaluate your JavaScript functions in real-time _while_ editing.
+      <br/><br/>
+      Inspect objects or DOM elements manipulated during execution, figure out the code path taken inside the function, directly jump to errors...
+      <br/><br/>
+      Cut the feedback loop to the minimum, conversational programming style! :)
     </div>
 
-    
+	  <h2>Demo</h2>
+	  <p>
+      <iframe src="http://player.vimeo.com/video/39627655" width="837" height="470" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
+      <br><small>
+ 	    <a href="https://vimeo.com/39627655/download?t=1333371087&v=91526930&s=2be492224ecb7b32d23f356cc2488630">Direct video link</a></small>
+	  </p>
+	  
+	  <h2>Screenshots</h2>
+	  <p>
+	  	<img src="scratchpad-code-path.jpg"><br><br>
+	  	<img src="scratchpad-object-view.jpg"><br><br>
+	  	<img src="scratchpad-element-inspect.jpg"><br><br>
+	  </p>
 
-    
-      <h2>Dependencies</h2>
-      <p>Firefox 11 or later. Firefox Nightly recommended for all features!</p>
-    
+    <h2>Dependencies</h2>
+    <p>Firefox 11 or later. Firefox <a href="http://nightly.mozilla.org/">Nightly</a> highly recommended!<br/>
+       <small>(the add-on has more features on Nightly and is more tested with this version)</small>
+    </p>
 
-    
-      <h2>Install</h2>
-      <p>Get the latest add-on from http://neonux.com/devtools/LiveScratchpad/builds/
+    <h2>Install</h2>
+    <p>Download and install the latest available add-on from <a href="http://neonux.com/devtools/LiveScratchpad/builds/">here</a>.
 </p>
-    
-
-    
-      <h2>License</h2>
-      <p>MPL 1.1/GPL 2.0/LGPL 2.1</p>
-    
-
-    
-      <h2>Authors</h2>
-      <p>Cedric Vivier <cedricv@neonux.com></p>
-    
-
-    
-      <h2>Contact</h2>
-      <p>Cedric Vivier <cedricv@neonux.com><br/>      </p>
-    
-
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="https://github.com/neonux/LiveScratchpad/zipball/master">zip</a> or
-      <a href="https://github.com/neonux/LiveScratchpad/tarball/master">tar formats.
+<br><br><br>
+  <p style="text-align: center; font-size: 0.8em;">
+Feedback? <a href="https://twitter.com/neonux" class="twitter-follow-button" data-show-count="false">Follow @neonux</a>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script> or drop by #devtools.<br>Pull requests also accepted ;)
     </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/neonux/LiveScratchpad</pre>
-    </p>
-
-    <div class="footer">
-      get the source code on GitHub : <a href="https://github.com/neonux/LiveScratchpad">neonux/LiveScratchpad</a>
-    </div>
-
   </div>
-
 </body>
 </html>

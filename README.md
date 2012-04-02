@@ -6,14 +6,10 @@
 This add-on adds a live function evaluation feature to the Scratchpad.
 
 You can change the arguments passed to the function and see the result of the
-function in real-time, including temporary assignments performed within the
-function.
-
-You can click on values to see the properties of the object, or click on
-a element to inspect it.
-
-It also shows you the code path taken during execution and provides some nice
-debugging features when manipulating regular expressions or HTML canvas.
+function in real-time, including the intermediate assignments performed within
+the function.
+Click on values to inspect the properties of an object or of a DOM element.
+Branches not executed during evaluation are directly visible from the editor.
 
 
 ## Build Instructions ##

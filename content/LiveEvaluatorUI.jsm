@@ -617,7 +617,17 @@ ObjectRepresenter.prototype =
     let container = AbstractRepresenter.addPresentationContainer("full", aItem);
     let obj = aItem.getUserData(this.USER_DATA_OBJECT);
     let list = aItem.ownerDocument.createElementNS(HTML_NS, "ol");
-    for (var key in obj) {
+
+    let props;
+    try {
+      props = Object.keys(obj).concat(Object.keys(Object.getPrototypeOf(obj)));
+    } catch (ex) { // FIXME: some wrapped objects throw NS_ERROR_FAILURE?
+      props = [];
+      for (let key in obj) props.push(key);
+    }
+    props.sort();
+
+    for each (var key in props) {
       try {
         list.appendChild(this._UI._createValueItem(key, obj[key]));
       } catch (ex) {

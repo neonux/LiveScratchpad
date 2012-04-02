@@ -88,9 +88,13 @@
     toggle: function SPLE_toggle()
     {
       if (this.iframe.hasAttribute("collapsed")) {
-        this.evaluate();
+        if (!this.evaluator) {
+          this._initialize(this.toggle.bind(this));
+          return;
+        }
         this.iframe.removeAttribute("collapsed");
         this.evaluator.editor = Scratchpad.editor;
+        this.evaluator.evaluate(true);
       } else {
         this.iframe.setAttribute("collapsed", "true");
         this.evaluator.editor = null;
@@ -100,7 +104,7 @@
     evaluate: function SPLE_evaluate()
     {
       if (!this.evaluator) {
-        this._initialize(function () { this.evaluate(); }.bind(this));
+        this._initialize(this.evaluate.bind(this));
         return;
       }
       this.evaluator.evaluate(true);
@@ -108,6 +112,12 @@
 
     _initialize: function SPLE__initialize(aCallback)
     {
+      if (this.evaluator) {
+        return;
+      }
+
+      aCallback = aCallback || function () {};
+
       //FIXME:
       document.querySelector("#scratchpad-editor").setAttribute("flex", "2");
 

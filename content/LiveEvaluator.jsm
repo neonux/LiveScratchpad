@@ -115,12 +115,14 @@ LiveEvaluator.prototype = {
     if (this._editor) {
       this._editor.removeEventListener(this._editor.EVENTS.TEXT_CHANGED,
                                        this._onTextChangeBinding);
+      this._triggerObservers("EditorDetach");
     }
 
     this._editor = aEditor;
 
     if (this._editor) {
       this._window = this._editor.editorElement.ownerDocument.defaultView;
+      this._triggerObservers("EditorAttach");
       this._editor.addEventListener(this._editor.EVENTS.TEXT_CHANGED,
                                     this._onTextChangeBinding);
     }
@@ -294,6 +296,12 @@ LiveEvaluator.prototype = {
    * Add an observer for LiveEvaluator events.
    *
    * The observer implements ILiveEvaluatorObserver := {
+   *   onEditorAttach          Called when an editor has been attached.
+   *                           Arguments: (LiveEvaluator aEvaluator)
+   *
+   *   onEditorDetach          Called when an editor has been detached.
+   *                           Arguments: (LiveEvaluator aEvaluator)
+   *
    *   onStartEvaluation:      Called when an evaluation starts.
    *                           Arguments: (LiveEvaluator aEvaluator)
    *

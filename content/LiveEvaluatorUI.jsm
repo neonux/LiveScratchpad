@@ -362,6 +362,14 @@ LiveEvaluatorUI.prototype =
   /* ILiveEvaluatorObserver implementation */
   /* @see LiveEvaluator.addObserver        */
 
+  onEditorDetach: function LEO_onEditorDetach(aEvaluator)
+  {
+    if (this._annotationAdded) {
+      let annotationModel = aEvaluator.editor._annotationModel;
+      annotationModel.removeAnnotations(DEADCODE_ANNOTATION);
+    }
+  },
+
   onStartEvaluation: function LEO_onStartEvaluation(aEvaluator, aNode)
   {
     delete this._root.dataset.abortReason;

@@ -65,11 +65,12 @@
               command="sp-cmd-evaluate"/>
   </menupopup>
 
-  <notificationbox id="scratchpad-notificationbox" flex="1" orient="horizontal">
+  <hbox id="scratchpad-editor">
     <iframe id="scratchpad-live-evaluator" flex="1"
             src="chrome://LiveScratchpad/content/live-evaluator.html"
             collapsed="true"/>
-  </notificationbox>
+    <splitter id="scratchpad-live-evaluator-splitter" collapsed="true"/>
+  </hbox>
 
   <script type="application/javascript"><![CDATA[
   Components.utils.import("chrome://LiveScratchpad/content/LiveEvaluator.jsm");
@@ -85,6 +86,13 @@
       return this._iframe;
     },
 
+    get splitter() {
+      if (!this._splitter) {
+        this._splitter = document.querySelector("#scratchpad-live-evaluator-splitter");
+      }
+      return this._splitter;
+    },
+
     toggle: function SPLE_toggle()
     {
       if (this.iframe.hasAttribute("collapsed")) {
@@ -93,10 +101,12 @@
           return;
         }
         this.iframe.removeAttribute("collapsed");
+        this.splitter.removeAttribute("collapsed");
         this.evaluator.editor = Scratchpad.editor;
         this.evaluator.evaluate(true);
       } else {
         this.iframe.setAttribute("collapsed", "true");
+        this.splitter.setAttribute("collapsed", "true");
         this.evaluator.editor = null;
       }
     },
